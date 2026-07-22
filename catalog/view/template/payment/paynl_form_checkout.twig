@@ -1,0 +1,153 @@
+<div id="paynl_payment"></div>
+{% if instructions %}
+	<div class="well well-sm">
+		<p>{{ instructions|nl2br }}</p>
+	</div>
+{% endif %}
+{% if optionSubList %}
+	<div class="form-group">
+		<select class="form-control" id="optionsub">
+			<option value="">{{ text_choose_bank }}</option>
+			{% for optionSub in optionSubList %}
+				<option value="{{ optionSub.id }}">{{ optionSub.name }}</option>
+			{% endfor %}
+		</select>
+	</div>
+{% endif %}
+
+<div class="alert alert-danger hidden" id="pay_error"></div>
+
+{% if dob %}
+	<script type="text/javascript">var paynlDob = {{ dob }};</script>
+	<div class="form-group">
+		<label for="dob">{{ text_dob }}</label>
+		<input type="date" class="form-control" id="dob"/>
+	</div>
+{% else %}
+	<script type="text/javascript">var paynlDob = null;</script>
+{% endif %}
+{% if coc %}
+	<script type="text/javascript">var paynlCoc = {{ coc }};</script>
+	<div class="form-group">
+		<label for="coc">{{ text_coc }}</label>
+		<input type="text" class="form-control" id="coc"/>
+	</div>
+{% else %}
+	<script type="text/javascript">var paynlCoc = null;</script>
+{% endif %}
+{% if vat %}
+	<script type="text/javascript">var paynlVat = {{ vat }};</script>
+	<div class="form-group">
+		<label for="vat">{{ text_vat }}</label>
+		<input type="text" class="form-control" id="vat"/>
+	</div>
+{% else %}
+	<script type="text/javascript">var paynlVat = null;</script>
+{% endif %}
+
+<div class="buttons">
+	<div class="pull-right">
+		<button type="button" onclick="paynlStartTransaction()" id="button-confirm" class="btn btn-primary">{{ button_confirm }}</button>
+	</div>
+</div>
+
+<script type="text/javascript">
+	function paynlStartTransaction() {
+		var data = {};
+
+		var optionSubEl = document.getElementById('optionsub');
+		if (optionSubEl) {
+			data.optionSubId = optionSubEl.value;
+		}
+
+		switch (paynlDob) {
+			case 1:
+				var dobEl = document.getElementById('dob');
+				if (dobEl) {
+					data.dob = dobEl.value;
+				}
+				break;
+			case 2:
+				var dobRequiredEl = document.getElementById('dob');
+				if (!dobRequiredEl || dobRequiredEl.value === '') {
+					document.getElementById('pay_error').textContent = '{{ error_dob }}';
+					document.getElementById('pay_error').classList.remove('hidden');
+					return;
+				}
+				data.dob = dobRequiredEl.value;
+				break;
+		}
+
+		switch (paynlCoc) {
+			case 1:
+				var cocEl = document.getElementById('coc');
+				if (cocEl) {
+					data.coc = cocEl.value;
+				}
+				break;
+			case 2:
+				var cocRequiredEl = document.getElementById('coc');
+				if (!cocRequiredEl || cocRequiredEl.value === '') {
+					document.getElementById('pay_error').textContent = '{{ error_coc }}';
+					document.getElementById('pay_error').classList.remove('hidden');
+					return;
+				}
+				data.coc = cocRequiredEl.value;
+				break;
+		}
+
+		switch (paynlVat) {
+			case 1:
+				var vatEl = document.getElementById('vat');
+				if (vatEl) {
+					data.vat = vatEl.value;
+				}
+				break;
+			case 2:
+				var vatRequiredEl = document.getElementById('vat');
+				if (!vatRequiredEl || vatRequiredEl.value === '') {
+					document.getElementById('pay_error').textContent = '{{ error_vat }}';
+					document.getElementById('pay_error').classList.remove('hidden');
+					return;
+				}
+				data.vat = vatRequiredEl.value;
+				break;
+		}
+
+		var confirmButton = document.getElementById('button-confirm');
+		confirmButton.disabled = true;
+		confirmButton.textContent = '{{ button_loading }}';
+
+		var params = new URLSearchParams(data).toString();
+
+		fetch('index.php?route=extension/paynl/payment/{{ paymentMethodName }}.startTransaction', {
+			method: 'POST',
+			headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
+			body: params
+		})
+			.then(function (response) { return response.json(); })
+			.then(function (json) {
+				document.querySelectorAll('.alert-danger').forEach(function (el) {
+					if (el.id !== 'pay_error') {
+						el.remove();
+					}
+				});
+
+				if (json.error) {
+					var errorEl = document.getElementById('pay_error');
+					errorEl.textContent = json.error;
+					errorEl.classList.remove('hidden');
+					confirmButton.disabled = false;
+					confirmButton.textContent = '{{ button_confirm }}';
+				}
+
+				if (json.success) {
+					window.location = json.success;
+				}
+			})
+			.catch(function () {
+				confirmButton.disabled = false;
+				confirmButton.textContent = '{{ button_confirm }}';
+			});
+	}
+</script>

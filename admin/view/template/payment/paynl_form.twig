@@ -1,0 +1,364 @@
+{{ header }}{{ column_left }}
+
+<div id="content">
+	<div class="page-header">
+		<div class="container-fluid">
+			<div class="float-end">
+				<button type="submit" form="form-pay" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+				<a href="{{ cancel }}" data-bs-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a>
+			</div>
+			<h1>{{ heading_title }}</h1>
+			<ol class="breadcrumb">
+				{% for breadcrumb in breadcrumbs %}
+					<li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+				{% endfor %}
+			</ol>
+		</div>
+	</div>
+	<div class="container-fluid">
+		{% if error_warning %}
+			<div class="alert alert-danger alert-dismissible">
+				<i class="fa-solid fa-circle-exclamation"></i> {{ error_warning }}
+				<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+			</div>
+		{% endif %}
+		{% if success_message %}
+			<div class="alert alert-success alert-dismissible">
+				<i class="fa-solid fa-circle-check"></i> {{ success_message }}
+				<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+			</div>
+		{% endif %}
+
+		<div class="card">
+			<div class="card-header">
+				<i class="fa-solid fa-credit-card"></i> {{ text_edit }}
+				<span class="text-body-secondary">— {{ text_register }}<a href="{{ link_register }}" target="_blank">{{ text_link_register }}</a>{{ text_after_register }}</span>
+			</div>
+			<div class="card-body">
+				<form action="{{ action }}" method="post" id="form-pay">
+					<ul class="nav nav-tabs">
+						<li class="nav-item"><a href="#tab-general" data-bs-toggle="tab" class="nav-link active">{{ text_general_settings }}</a></li>
+						{% if availability_fast_checkout %}
+							<li class="nav-item"><a href="#tab-fast-checkout" data-bs-toggle="tab" class="nav-link">{{ text_display_fast_checkout }}</a></li>
+						{% endif %}
+						<li class="nav-item"><a href="#tab-advanced" data-bs-toggle="tab" class="nav-link">{{ text_advanced_settings }}</a></li>
+						<li class="nav-item"><a href="#tab-method" data-bs-toggle="tab" class="nav-link">{{ text_method_settings }}{% if error_status %} <i class="fa-solid fa-triangle-exclamation text-danger"></i>{% endif %}</a></li>
+					</ul>
+					<div class="tab-content pt-3">
+
+						<div id="tab-general" class="tab-pane active">
+							<div class="row mb-3 required">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_tokencode">{{ text_tokencode }}</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control{% if error_tokencode %} is-invalid{% endif %}" name="payment_paynl_general_tokencode" value="{{ tokencode }}"/>
+									{% if error_tokencode %}<div class="invalid-feedback">{{ error_tokencode|raw }}</div>{% endif %}
+								</div>
+							</div>
+							<div class="row mb-3 required">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_apitoken">{{ text_apitoken }}</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control{% if error_apitoken %} is-invalid{% endif %}" name="payment_paynl_general_apitoken" value="{{ apitoken }}"/>
+									{% if error_apitoken %}<div class="invalid-feedback">{{ error_apitoken|raw }}</div>{% endif %}
+								</div>
+							</div>
+							<div class="row mb-3 required">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_serviceid">{{ text_serviceid }}</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control{% if error_serviceid %} is-invalid{% endif %}" name="payment_paynl_general_serviceid" value="{{ serviceid }}"/>
+									{% if error_serviceid %}<div class="invalid-feedback">{{ error_serviceid|raw }}</div>{% endif %}
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_testmode">{{ text_testmode }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="payment_paynl_general_testmode" value="0"/>
+										<input type="checkbox" class="form-check-input" name="payment_paynl_general_testmode" value="1" id="input-testmode"{% if testmode %} checked{% endif %}/>
+									</div>
+									<div class="form-text">{{ text_testmode_tooltip }}</div>
+								</div>
+							</div>
+						</div>
+
+						{% if availability_fast_checkout %}
+							<div id="tab-fast-checkout" class="tab-pane">
+								<div class="row mb-3">
+									<label class="col-sm-3 col-form-label" for="{{ fast_checkout }}">{{ text_display_fast_checkout }}</label>
+									<div class="col-sm-9">
+										<div class="form-check form-switch form-switch-lg pt-1">
+											<input type="hidden" name="{{ fast_checkout }}" value="0"/>
+											<input type="checkbox" class="form-check-input" name="{{ fast_checkout }}" value="1" id="{{ fast_checkout }}"{% if display_fast_checkout %} checked{% endif %}/>
+										</div>
+										<div class="form-text">{{ text_display_fast_checkout_tooltip }}</div>
+									</div>
+								</div>
+								<div class="row mb-3">
+									<label class="col-sm-3 col-form-label">{{ text_default_shipping_method }}</label>
+									<div class="col-sm-9 pt-2">
+										{% for shipping_method in shipping_methods %}
+											<div class="form-check form-check-inline">
+												<input type="radio" class="form-check-input" name="{{ fast_checkout_default_shipping_name }}" value="{{ shipping_method.code }}" id="input-shipping-{{ shipping_method.code }}"{% if fast_checkout_default_shipping == shipping_method.code %} checked{% endif %}>
+												<label class="form-check-label" for="input-shipping-{{ shipping_method.code }}">{{ shipping_method.title }}</label>
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+								<div class="row mb-3">
+									<label class="col-sm-3 col-form-label">{{ text_only_guest }}</label>
+									<div class="col-sm-9">
+										<div class="form-check form-switch form-switch-lg pt-1">
+											<input type="hidden" name="{{ fast_checkout_only_guest_name }}" value="0"/>
+											<input type="checkbox" class="form-check-input" name="{{ fast_checkout_only_guest_name }}" value="1"{% if fast_checkout_only_guest %} checked{% endif %}/>
+										</div>
+									</div>
+								</div>
+								<div class="row mb-3">
+									<label class="col-sm-3 col-form-label">Show button on</label>
+									<div class="col-sm-9 pt-2">
+										{% for place in button_places_list %}
+											<div class="form-check form-check-inline">
+												<input type="checkbox" class="form-check-input" name="{{ fast_checkout_button_places_name }}[]" value="{{ place.key }}" id="input-place-{{ place.key }}"{% if place.key in fast_checkout_checked_button_places %} checked{% endif %}>
+												<label class="form-check-label" for="input-place-{{ place.key }}">{{ place.value }}</label>
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+							</div>
+						{% endif %}
+
+						<div id="tab-advanced" class="tab-pane">
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_prefix">{{ text_prefix }}</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" name="payment_paynl_general_prefix" value="{{ prefix }}"/>
+									<div class="form-text">{{ text_prefix_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_gateway">{{ text_gateway }}</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" name="payment_paynl_general_gateway" value="{{ gateway }}"/>
+									<div class="form-text">{{ text_gateway_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_refund_processing }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="payment_paynl_general_refund_processing" value="0"/>
+										<input type="checkbox" class="form-check-input" name="payment_paynl_general_refund_processing" value="1"{% if refund_processing %} checked{% endif %}/>
+									</div>
+									<div class="form-text">{{ text_refund_processing_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_auto_capture }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="payment_paynl_general_auto_capture" value="0"/>
+										<input type="checkbox" class="form-check-input" name="payment_paynl_general_auto_capture" value="1"{% if auto_capture %} checked{% endif %}/>
+									</div>
+									<div class="form-text">{{ text_auto_capture_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_auto_void }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="payment_paynl_general_auto_void" value="0"/>
+										<input type="checkbox" class="form-check-input" name="payment_paynl_general_auto_void" value="1"{% if auto_void %} checked{% endif %}/>
+									</div>
+									<div class="form-text">{{ text_auto_void_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_follow_payment_method }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="payment_paynl_general_follow_payment_method" value="0"/>
+										<input type="checkbox" class="form-check-input" name="payment_paynl_general_follow_payment_method" value="1"{% if follow_payment_method %} checked{% endif %}/>
+									</div>
+									<div class="form-text">{{ text_follow_payment_method_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_display_icon">{{ text_display_icon }}</label>
+								<div class="col-sm-9">
+									<select class="form-select" name="payment_paynl_general_display_icon">
+										<option value="" {{ display_icon == '' ? 'selected' : '' }}>{{ text_disabled }}</option>
+										<option value="20x20" {{ display_icon == '20x20' ? 'selected' : '' }}>20 x 20</option>
+										<option value="25x25" {{ display_icon == '25x25' ? 'selected' : '' }}>25 x 25</option>
+										<option value="50x50" {{ display_icon == '50x50' ? 'selected' : '' }}>50 x 50</option>
+										<option value="75x75" {{ display_icon == '75x75' ? 'selected' : '' }}>75 x 75</option>
+										<option value="100x100" {{ display_icon == '100x100' ? 'selected' : '' }}>100 x 100</option>
+									</select>
+									<div class="form-text">{{ text_display_icon_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_custom_exchange_url">{{ text_custom_exchange_url }}</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" name="payment_paynl_general_custom_exchange_url" value="{{ custom_exchange_url }}"/>
+									<div class="form-text">{{ text_custom_exchange_url_tooltip|raw }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_logging }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="payment_paynl_general_logging" value="0"/>
+										<input type="checkbox" class="form-check-input" name="payment_paynl_general_logging" value="1"{% if logging %} checked{% endif %}/>
+									</div>
+									<div class="form-text">{{ text_logging_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="payment_paynl_general_test_ip">{{ text_test_ip }}</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" name="payment_paynl_general_test_ip" value="{{ test_ip }}"/>
+									<div class="form-text">{{ text_test_ip_tooltip }} {{ text_current_ip }}<code>{{ current_IP }}</code></div>
+								</div>
+							</div>
+						</div>
+
+						<div id="tab-method" class="tab-pane">
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="{{ payment_method_name }}_status">{{ entry_status }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="{{ payment_method_name }}_status" value="0"/>
+										<input type="checkbox" class="form-check-input{% if error_status %} is-invalid{% endif %}" name="{{ payment_method_name }}_status" value="1" id="{{ payment_method_name }}_status"{% if status %} checked{% endif %}/>
+										{% if error_status %}<div class="invalid-feedback">{{ error_status|raw }}</div>{% endif %}
+									</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="{{ payment_method_name }}_label">Label</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" name="{{ payment_method_name }}_label" value="{{ label }}"/>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="input-geo-zone">{{ entry_geo_zone }}</label>
+								<div class="col-sm-9">
+									<select name="{{ payment_method_name }}_geo_zone_id" id="input-geo-zone" class="form-select">
+										<option value="0">All Zones</option>
+										{% for geo_zone in geo_zones %}
+											<option value="{{ geo_zone.geo_zone_id }}" {% if geo_zone.geo_zone_id == geo_zone_id %}selected{% endif %}>{{ geo_zone.name }}</option>
+										{% endfor %}
+									</select>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="{{ payment_method_name }}_customer_type">{{ text_customer_type }}</label>
+								<div class="col-sm-9">
+									<select class="form-select" name="{{ payment_method_name }}_customer_type">
+										<option value="both" {{ customer_type == 'both' ? 'selected' : '' }}>{{ text_both }}</option>
+										<option value="private" {{ customer_type == 'private' ? 'selected' : '' }}>{{ text_private }}</option>
+										<option value="business" {{ customer_type == 'business' ? 'selected' : '' }}>{{ text_business }}</option>
+									</select>
+									<div class="form-text">{{ text_customer_type_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_confirm_start }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="{{ payment_method_name }}_confirm_on_start" value="0"/>
+										<input type="checkbox" class="form-check-input" name="{{ payment_method_name }}_confirm_on_start" value="1"{% if confirm_on_start == 1 %} checked{% endif %}/>
+									</div>
+									<div class="form-text">{{ text_confirm_start_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_send_statusupdates }}</label>
+								<div class="col-sm-9">
+									<div class="form-check form-switch form-switch-lg pt-1">
+										<input type="hidden" name="{{ payment_method_name }}_send_status_updates" value="0"/>
+										<input type="checkbox" class="form-check-input" name="{{ payment_method_name }}_send_status_updates" value="1"{% if send_status_updates == 1 %} checked{% endif %}/>
+									</div>
+									<div class="form-text">{{ text_send_statusupdates_tooltip }}</div>
+								</div>
+							</div>
+
+							<hr/>
+							<h6 class="text-body-secondary">{{ entry_order_status }}</h6>
+
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_status_pending }}</label>
+								<div class="col-sm-9">
+									<select class="form-select" name="{{ payment_method_name }}_pending_status">
+										{% for order_status in order_statuses %}
+											<option value="{{ order_status.order_status_id }}" {{ order_status.order_status_id == pending_status ? 'selected' : '' }}>{{ order_status.name }}</option>
+										{% endfor %}
+									</select>
+									<div class="form-text">{{ text_status_pending_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_status_complete }}</label>
+								<div class="col-sm-9">
+									<select class="form-select" name="{{ payment_method_name }}_completed_status">
+										{% for order_status in order_statuses %}
+											<option value="{{ order_status.order_status_id }}" {{ order_status.order_status_id == completed_status ? 'selected' : '' }}>{{ order_status.name }}</option>
+										{% endfor %}
+									</select>
+									<div class="form-text">{{ text_status_complete_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_status_canceled }}</label>
+								<div class="col-sm-9">
+									<select class="form-select" name="{{ payment_method_name }}_canceled_status">
+										{% for order_status in order_statuses %}
+											<option value="{{ order_status.order_status_id }}" {{ order_status.order_status_id == canceled_status ? 'selected' : '' }}>{{ order_status.name }}</option>
+										{% endfor %}
+									</select>
+									<div class="form-text">{{ text_status_canceled_tooltip }}</div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_status_refunded }}</label>
+								<div class="col-sm-9">
+									<select class="form-select" name="{{ payment_method_name }}_refunded_status">
+										{% for order_status in order_statuses %}
+											<option value="{{ order_status.order_status_id }}" {{ order_status.order_status_id == refunded_status ? 'selected' : '' }}>{{ order_status.name }}</option>
+										{% endfor %}
+									</select>
+									<div class="form-text">{{ text_status_refunded_tooltip }}</div>
+								</div>
+							</div>
+
+							<hr/>
+
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ text_minimum_amount }}</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" name="{{ payment_method_name }}_total" value="{{ total }}"/>
+								</div>
+								<label class="col-sm-2 col-form-label text-sm-end">{{ text_maximum_amount }}</label>
+								<div class="col-sm-3">
+									<input type="text" class="form-control" name="{{ payment_method_name }}_totalmax" value="{{ totalmax }}"/>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">{{ entry_sort_order }}</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" name="{{ payment_method_name }}_sort_order" value="{{ sort_order }}" style="max-width: 120px;"/>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label" for="{{ payment_method_name }}_instructions">{{ text_payment_instructions }}</label>
+								<div class="col-sm-9">
+									<textarea class="form-control" name="{{ payment_method_name }}_instructions" placeholder="{{ text_payment_instructions_tooltip }}" rows="4">{{ instructions }}</textarea>
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+{{ footer }}

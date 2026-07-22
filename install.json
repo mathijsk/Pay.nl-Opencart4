@@ -1,0 +1,7 @@
+{
+  "name": "Pay. Payment Methods",
+  "description": "OpenCart 4 payment extension for Pay. (pay.nl) — iDEAL, cards, PayPal, Bancontact, Klarna, gift cards and other Pay.nl-supported payment methods, converted from the official OpenCart 3 plugin.",
+  "version": "1.0.0",
+  "author": "NoMercy Shop (converted from Pay.nl's official OpenCart 3 plugin)",
+  "link": "https://www.pay.nl"
+}
