@@ -38,7 +38,21 @@ request.
 
 ## Installation
 
-### 1. Copy the files into place
+Two ways to install this - pick whichever is easier for you, both end
+up in the same place.
+
+### Option A: the release zip (recommended, no command line needed)
+
+1. Download `paynl.ocmod.zip` from this repository's
+   [Releases page](../../releases/latest).
+2. In your admin panel, go to **Marketplace > Extensions > Installer**
+   and upload it there. OpenCart handles both the file placement and
+   the one-time extension registration automatically as part of that
+   upload.
+
+### Option B: from source (git clone / download)
+
+#### 1. Copy the files into place
 
 Copy (or `git clone`) this entire `paynl` folder into your OpenCart 4
 store's `extension/` directory, so you end up with:
@@ -47,14 +61,14 @@ store's `extension/` directory, so you end up with:
 <your-opencart-store>/extension/paynl/
 ```
 
-### 2. Register the extension
+#### 2. Register the extension
 
 OpenCart 4 needs a one-time database registration step before it will
 recognize a new extension folder on every page load (this is normally
-handled automatically when installing through Marketplace's own "upload
-a .ocmod.zip" screen - since a plain file copy/git clone skips that
-screen, this script does the same registration directly). From your
-store's root directory, run:
+handled automatically when installing through Marketplace's own upload
+screen, per Option A above - since a plain file copy/git clone skips
+that screen, this script does the same registration directly). From
+your store's root directory, run:
 
 ```
 php extension/paynl/install.php
@@ -63,11 +77,13 @@ php extension/paynl/install.php
 This is safe to run more than once - it checks whether the extension is
 already registered before doing anything.
 
-**If you'd rather use OpenCart's own upload flow instead:** zip up the
-*contents* of this `paynl` folder (not the folder itself - `install.json`,
-`admin/`, `catalog/`, `system/` should sit at the root of the zip) into
-a file named exactly `paynl.ocmod.zip`, then upload it via Marketplace >
-Extensions > Installer. Either method produces the same result.
+**Building your own zip instead of using the published one:** zip up
+the *contents* of this `paynl` folder (not the folder itself -
+`install.json`, `admin/`, `catalog/`, `system/` should sit at the root
+of the zip) into a file named exactly `paynl.ocmod.zip`, then upload it
+via Marketplace > Extensions > Installer, same as Option A.
+
+### Then, either way:
 
 ### 3. Install the payment methods you want
 
