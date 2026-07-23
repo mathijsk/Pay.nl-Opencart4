@@ -108,6 +108,99 @@ class PaymentController extends \Opencart\System\Engine\Controller {
 	}
 
 	/**
+	 * Confirm
+	 *
+	 * The entry point native OC4 checkout (and this store's own
+	 * one-page checkout - see extension/nomercy_shop's own
+	 * common/checkout.php::place(), which calls this exact method by
+	 * route after creating the order) calls once the customer places
+	 * the order. Ported in spirit from
+	 * extension/opencart/catalog/controller/payment/cod.php's own
+	 * confirm() - same order_id/payment_method validation and JSON
+	 * response contract - but where COD finishes the order immediately
+	 * (no external redirect needed), this starts the real Pay.nl
+	 * transaction and sends the customer's browser to Pay.nl's hosted
+	 * payment page instead, reusing the same Transaction::startTransaction()
+	 * call the standalone bank-picker step (index()/startTransaction())
+	 * already uses. Not part of the original OC3 plugin's own methods
+	 * (that plugin only ever supported OC3's older multi-step checkout
+	 * template flow) - added specifically to close the gap this
+	 * store's own one-page checkout needs, confirmed live against a
+	 * real "no payment methods show" / "Betaalmethode vereist!" bug
+	 * report.
+	 *
+	 * @return void
+	 */
+	public function confirm(): void {
+		$this->load->language('extension/paynl/payment/paynl');
+
+		$json = [];
+		$order_info = [];
+
+		if (isset($this->session->data['order_id'])) {
+			$this->load->model('checkout/order');
+
+			$order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+
+			if (!$order_info) {
+				$json['redirect'] = $this->url->link('checkout/failure', 'language=' . $this->config->get('config_language'), true);
+
+				unset($this->session->data['order_id']);
+			}
+		} else {
+			$json['error'] = $this->language->get('error_order');
+		}
+
+		$expected_code = $this->paymentMethodName . '.' . $this->paymentMethodName;
+
+		if (!$json && (!isset($this->session->data['payment_method']) || $this->session->data['payment_method']['code'] != $expected_code)) {
+			$json['error'] = $this->language->get('error_payment_method');
+		}
+
+		if (!$json) {
+			$this->load->model('extension/paynl/payment/' . $this->paymentMethodName);
+			$model_key = 'model_extension_paynl_payment_' . $this->paymentMethodName;
+			/** @var \Opencart\System\Engine\Proxy $method_model */
+			$method_model = $this->registry->get($model_key);
+
+			// Neither OC4's own error_display config value nor PHP's
+			// error_reporting() actually stopped this in live testing -
+			// the bundled Guzzle vendor library's own curl_close()
+			// deprecation notice appears to fire during PHP's shutdown
+			// phase (a cURL handle's destructor), after this method has
+			// already returned, which is why suppressing it from
+			// *within* this method's own execution window didn't work.
+			// A replacement error handler stays registered through
+			// shutdown (not restored - nothing else needs the original
+			// handler back before this request ends), silently
+			// swallowing deprecation notices specifically while passing
+			// everything else through to OC4's own handler.
+			$previous_handler = set_error_handler(function (int $code, string $message, string $file, int $line) use (&$previous_handler): bool {
+				if ($code === E_DEPRECATED || $code === E_USER_DEPRECATED) {
+					return true;
+				}
+
+				return $previous_handler ? (bool)$previous_handler($code, $message, $file, $line) : false;
+			});
+
+			try {
+				$method_model->log('confirm(): starting payment for order ' . $order_info['order_id'] . ' via ' . $this->paymentMethodName);
+
+				$transaction = new Transaction($this->registry);
+				$json['redirect'] = $transaction->startTransaction($order_info, $this->paymentOptionId, $this->paymentMethodName);
+			} catch (SdkPayException $e) {
+				$json['error'] = $this->language->get($this->getErrorMessage($e->getMessage()));
+			} catch (\Throwable $e) {
+				$method_model->log('confirm(): unexpected error: ' . $e->getMessage());
+				$json['error'] = $this->language->get('text_pay_api_error_general');
+			}
+		}
+
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($json));
+	}
+
+	/**
 	 * Start Transaction
 	 *
 	 * AJAX endpoint the checkout page's own JS calls once the customer
@@ -129,15 +222,28 @@ class PaymentController extends \Opencart\System\Engine\Controller {
 
 		$response = [];
 
+		// See confirm()'s own comment for why this - not config,
+		// not error_reporting() - is the fix that actually works.
+		$previous_handler = set_error_handler(function (int $code, string $message, string $file, int $line) use (&$previous_handler): bool {
+			if ($code === E_DEPRECATED || $code === E_USER_DEPRECATED) {
+				return true;
+			}
+
+			return $previous_handler ? (bool)$previous_handler($code, $message, $file, $line) : false;
+		});
+
 		try {
 			$method_model->log('start payment: ' . $this->paymentMethodName);
 
 			$transaction = new Transaction($this->registry);
 			$response['success'] = $transaction->startTransaction($order_info, $this->paymentOptionId, $this->paymentMethodName);
 		} catch (SdkPayException $e) {
-			$response['error'] = 'Er is een fout opgetreden: ' . $e->getMessage();
-		} catch (\Exception $e) {
-			$response['error'] = 'Onbekende fout: ' . $e->getMessage();
+			$this->load->language('extension/paynl/payment/paynl');
+			$response['error'] = $this->language->get($this->getErrorMessage($e->getMessage()));
+		} catch (\Throwable $e) {
+			$method_model->log('startTransaction(): unexpected error: ' . $e->getMessage());
+			$this->load->language('extension/paynl/payment/paynl');
+			$response['error'] = $this->language->get('text_pay_api_error_general');
 		}
 
 		$this->response->addHeader('Content-Type: application/json');
@@ -462,6 +568,17 @@ class PaymentController extends \Opencart\System\Engine\Controller {
 		$method_model = $this->registry->get($model_key);
 
 		$response = [];
+
+		// Same fix as confirm()/startTransaction() - see confirm()'s
+		// own comment for the full story of why this specific approach
+		// is needed.
+		$previous_handler = set_error_handler(function (int $code, string $message, string $file, int $line) use (&$previous_handler): bool {
+			if ($code === E_DEPRECATED || $code === E_USER_DEPRECATED) {
+				return true;
+			}
+
+			return $previous_handler ? (bool)$previous_handler($code, $message, $file, $line) : false;
+		});
 
 		try {
 			$method_model->log('start fast checkout payment: ' . $this->paymentMethodName);

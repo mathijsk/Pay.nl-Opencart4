@@ -109,6 +109,24 @@ class AdminController extends \Opencart\System\Engine\Controller {
 	 * @return void
 	 */
 	public function index(): void {
+		// Every code path below this point that can reach a Pay.nl API
+		// call (refreshPaymentOptions() via validateGeneral(), and the
+		// refund/capture/void actions further down) uses the bundled
+		// Guzzle vendor library - see PaymentController::confirm()'s own
+		// comment for the full story of why this specific fix (not
+		// output buffering, not the error_display config, not PHP's own
+		// error_reporting()) is what's actually needed to stop its
+		// curl_close() deprecation notice from corrupting a JSON
+		// response. Registered once here, for the whole method, rather
+		// than repeated at each individual call site.
+		$previous_handler = set_error_handler(function (int $code, string $message, string $file, int $line) use (&$previous_handler): bool {
+			if ($code === E_DEPRECATED || $code === E_USER_DEPRECATED) {
+				return true;
+			}
+
+			return $previous_handler ? (bool)$previous_handler($code, $message, $file, $line) : false;
+		});
+
 		$this->load->language('extension/paynl/payment/' . $this->paymentMethodName);
 
 		$data = [];

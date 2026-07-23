@@ -403,7 +403,19 @@ class Model extends \Opencart\System\Engine\Model {
 	 *
 	 * Determines whether this payment method is currently offerable at
 	 * checkout for the given address/order amount, and if so, returns
-	 * the array shape OC4's checkout expects (code/title/terms/sort_order).
+	 * the array shape OC4's checkout actually expects - confirmed by
+	 * reading extension/opencart/catalog/model/payment/cod.php's own
+	 * getMethods() directly, not assumed from the OC3 original (which
+	 * used a different, flatter code/title/terms/sort_order shape).
+	 * OC4's own checkout.js (and this store's own, ported from the
+	 * same expectation) requires an 'option' dict per method - even a
+	 * single-option method like this needs one entry under it, or the
+	 * frontend throws trying to iterate a missing/undefined 'option'
+	 * for this method specifically, which - since that iteration
+	 * happens in one shared loop over ALL payment methods - silently
+	 * broke the ENTIRE payment method list on checkout, not just this
+	 * one method's own entry. Found and fixed live after a real
+	 * customer-facing report ("no payment methods show").
 	 *
 	 * @param array<string, mixed>|false $address
 	 * @param float|false                 $order_amount
@@ -475,10 +487,25 @@ class Model extends \Opencart\System\Engine\Model {
 			$icon = '<img' . $style . ' class="paynl_icon" src="/extension/paynl/catalog/view/image/payment/paynl/' . $payment_options['brand_id'] . '.png"> ';
 		}
 
+		$name = $icon . $this->getLabel();
+
 		return [
 			'code'       => $pm,
-			'title'      => $icon . $this->getLabel(),
-			'terms'      => '',
+			'name'       => $name,
+			'option'     => [
+				$pm => [
+					// Native OC4's own checkout/payment_method.php::save()
+					// does explode('.', $submitted_value) and requires
+					// exactly two parts (group code, sub-option key) -
+					// confirmed by reading that controller directly, not
+					// assumed. Matches COD's own native 'cod.cod' pattern:
+					// same value repeated on both sides of the dot for a
+					// method with only one real option, like every method
+					// here.
+					'code' => $pm . '.' . $pm,
+					'name' => $name
+				]
+			],
 			'sort_order' => $this->getConfig('sort_order', $pm)
 		];
 	}

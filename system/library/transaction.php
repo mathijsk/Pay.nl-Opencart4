@@ -121,8 +121,8 @@ class Transaction {
 
 		$company = new Company();
 		$company->setName($order_info['payment_company'] ?? '');
-		$company->setCoc($request_lib->post['coc'] ?? null);
-		$company->setVat($request_lib->post['vat'] ?? null);
+		$company->setCoc((string)($request_lib->post['coc'] ?? ''));
+		$company->setVat((string)($request_lib->post['vat'] ?? ''));
 		$company->setCountryCode($order_info['payment_iso_code_2']);
 
 		$customer->setCompany($company);

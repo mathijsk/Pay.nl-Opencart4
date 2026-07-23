@@ -123,6 +123,26 @@ you're using, go to **Exchange settings** and set:
 - **Request method**: SIGNED JSON POST (recommended - this extension
   fully supports HMAC-signed webhook verification)
 
+### 6. Set your store's Session Samesite Cookie to Lax
+
+In your admin panel, go to **Settings > Server** and set **Session
+Samesite Cookie** to **Lax** (OpenCart 4 ships with this set to
+**Strict** by default).
+
+This isn't specific to this extension - it affects **any** payment
+method that redirects the customer off-site and back (iDEAL, most
+card/3-D Secure flows, PayPal, etc.), not just Pay.'s methods. With
+`Strict`, browsers block the session cookie on the cross-site
+navigation back from the payment provider's domain, so OpenCart can't
+recognize the returning customer and starts a brand-new (empty-cart)
+session - this is exactly what an empty cart after cancelling a
+payment looks like, confirmed live. `Lax` is the standard, widely-used
+setting for e-commerce sites with external payment redirects: it still
+blocks the cookie on cross-site POST requests, AJAX/fetch calls, and
+embedded content (so real CSRF protection is unaffected), and only
+allows it on top-level GET navigations - exactly what a payment
+gateway's return redirect is.
+
 ## Known limitations
 
 - **Fast Checkout only has a real button for iDEAL.** The original

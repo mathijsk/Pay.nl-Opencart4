@@ -17,6 +17,9 @@ $_['error_vat'] = 'A VAT-id is required to finish this transaction, please fill 
 $_['text_cancel'] = 'The payment has been cancelled, please try again.';
 $_['text_denied'] = 'Unfortunately the payment has been denied. Please try again or use another payment method.';
 
+$_['error_order'] = 'No order was found to pay for.';
+$_['error_payment_method'] = 'This payment method could not be started. Please select the payment method again.';
+
 $_['text_pay_api_error_amount'] = 'Unfortunately the order amount does not fit the requirements for this payment method.';
 $_['text_pay_api_error_activated'] = 'The selected payment method is not enabled. Please select another payment method.';
 $_['text_pay_api_error_country'] = 'This currency is not allowed in combination with this payment method. Please select another payment method.';
