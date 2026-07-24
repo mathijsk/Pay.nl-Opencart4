@@ -25,6 +25,54 @@ request.
 - Automatic void/capture when an order's status changes
 - Fast Checkout express-buy button (iDEAL only - see **Known
   limitations** below)
+- Optional per-method payment surcharges, restricted to methods where
+  it's actually legal, with correct VAT handling - see **Payment
+  method surcharges** below
+
+## Payment method surcharges (optional)
+
+Some payment methods can carry a small surcharge (a fixed amount and/
+or a percentage) to cover the transaction cost of offering them. This
+is **off by default everywhere**, and - for methods where charging a
+consumer a surcharge isn't legally permitted at all (varies by
+jurisdiction; this was built against Dutch/EU rules specifically -
+iDEAL, standard consumer credit/debit cards, SEPA direct debit/bank
+transfer, mobile wallets tied to a standard card, and a few local
+European bank methods) - **the fields aren't shown at all**, so there's
+no way to accidentally misconfigure it for those.
+
+To configure it: open any *allowed* payment method's own settings page
+and look for **Surcharge - fixed amount** / **Surcharge - percentage**
+under Payment Method Settings. If you don't see these fields on a
+particular method, that method is one where a surcharge isn't
+permitted (an explanatory message is shown in their place instead).
+
+**Important**: whatever you enter is treated as the full,
+**VAT-inclusive** amount you're allowed to charge (matching the common
+rule that a surcharge may not exceed your actual transaction cost, and
+that cost itself is typically VAT-exempt to you as the merchant, since
+Pay.'s own fee is a financial service - but you must still charge VAT
+on top when passing it to the consumer). This extension automatically
+works out the correct pre-tax line value and folds the VAT into your
+order's existing tax total, following whatever VAT rate(s) your actual
+products use (split proportionally if your cart mixes VAT rates) -
+you do not need to do this math yourself, and should not add VAT on
+top of what you enter.
+
+The underlying mechanism is a real, native OpenCart "Order Total"
+extension (Marketplace > Extensions > Order Totals > "Pay. -
+Betaalmethode toeslag"), auto-installed alongside the main extension.
+Its own settings screen there only has an on/off switch and a sort
+order - **the sort order must stay lower than your "Taxes" total's own
+sort order** (5 by default; this extension defaults to 4) for the VAT
+folding described above to work correctly. Leave this alone unless you
+know you need to change total ordering for another reason.
+
+**Consult your own accountant/tax advisor and local regulations before
+enabling this** - this was built and tested against Dutch/EU rules
+specifically; if you're outside that jurisdiction, whether a surcharge
+is permitted at all, and how VAT should be handled on it, may be
+completely different where you are.
 
 ## Requirements
 

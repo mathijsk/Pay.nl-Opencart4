@@ -172,6 +172,16 @@ class AdminController extends \Opencart\System\Engine\Controller {
 
 		$data['availability_fast_checkout'] = false;
 
+		// Legally forbidden on some methods (iDEAL, standard consumer
+		// cards, SEPA, etc.) per Dutch/EU surcharge rules - see
+		// Model::SURCHARGE_FORBIDDEN's own docblock for the reasoning.
+		// The template only renders these fields at all when this is
+		// true, and the surcharge total extension separately re-checks
+		// this itself before ever applying a stored value, as a second
+		// layer of protection against a merchant ending up illegally
+		// surcharging one of these.
+		$data['surcharge_allowed'] = !in_array($this->paymentMethodName, Model::SURCHARGE_FORBIDDEN, true);
+
 		if ($this->fastCheckout === true) {
 			$data['availability_fast_checkout'] = true;
 			$data['fast_checkout'] = 'payment_' . $this->paymentMethodName . '_display_fast_checkout';
@@ -339,6 +349,8 @@ class AdminController extends \Opencart\System\Engine\Controller {
 
 		$data['confirm_on_start'] = $data['confirm_on_start'] ?? 1;
 		$data['send_status_updates'] = $data['send_status_updates'] ?? '1';
+		$data['surcharge_fixed'] = $data['surcharge_fixed'] ?? '0';
+		$data['surcharge_percentage'] = $data['surcharge_percentage'] ?? '0';
 		$data['completed_status'] = !empty($data['completed_status']) ? $data['completed_status'] : 2;
 		$data['canceled_status'] = !empty($data['canceled_status']) ? $data['canceled_status'] : 7;
 		$data['refunded_status'] = !empty($data['refunded_status']) ? $data['refunded_status'] : 11;

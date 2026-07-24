@@ -27,6 +27,48 @@ class Model extends \Opencart\System\Engine\Model {
 	public const STATUS_REFUNDED = 'REFUNDED';
 
 	/**
+	 * Payment methods where Dutch/EU rules (ACM guidance, per
+	 * https://www.acm.nl/nl/verkoop-aan-consumenten/de-koop-sluiten/betaalmogelijkheden-aanbieden)
+	 * do not allow a payment surcharge to be charged to the consumer -
+	 * iDEAL/Wero, standard consumer credit/debit cards, SEPA methods,
+	 * mobile wallets tied to a standard card, and specific local
+	 * European bank methods (EPS/Giropay/Sofort/Blik). Checked both
+	 * when deciding whether to show the surcharge fields on a method's
+	 * settings page (AdminController) and, as a defense-in-depth
+	 * safety net, before ever actually applying a stored surcharge
+	 * value (the surcharge total extension) - a merchant should never
+	 * be able to end up illegally surcharging one of these even via a
+	 * direct database edit or a future bug elsewhere.
+	 *
+	 * Pay. doesn't expose a separate "business" vs "consumer" card
+	 * payment option, so paynl_visamastercard/paynl_groupedcreditcards
+	 * are included here (can't distinguish the one case - a genuinely
+	 * business card - where a surcharge would be allowed, so the
+	 * safer default is to disallow it for the whole method).
+	 *
+	 * @var array<int, string>
+	 */
+	public const SURCHARGE_FORBIDDEN = [
+		'paynl_ideal',
+		'paynl_wero',
+		'paynl_visamastercard',
+		'paynl_groupedcreditcards',
+		'paynl_mistercash',
+		'paynl_maestro',
+		'paynl_incasso',
+		'paynl_overboeking',
+		'paynl_applepay',
+		'paynl_googlepay',
+		'paynl_eps',
+		'paynl_giropay',
+		'paynl_sofort',
+		'paynl_sofortbanking',
+		'paynl_sofortbankingds',
+		'paynl_sofortbankinghr',
+		'paynl_blik'
+	];
+
+	/**
 	 * @var int
 	 */
 	protected int $paymentOptionId = 0;
@@ -464,27 +506,36 @@ class Model extends \Opencart\System\Engine\Model {
 		$icon_size = $this->config->get('payment_paynl_general_display_icon');
 
 		if (!empty($icon_size) && !empty($payment_options['brand_id'])) {
-			$style = ' style="width:50px; height:50px;"';
+			$style = ' style="width:50px; height:50px; display:inline-block; vertical-align:middle; margin-right:6px;"';
 
 			switch ($icon_size) {
 				case '20x20':
-					$style = ' style="width:20px; height:20px;"';
+					$style = ' style="width:20px; height:20px; display:inline-block; vertical-align:middle; margin-right:6px;"';
 					break;
 				case '25x25':
-					$style = ' style="width:25px; height:25px;"';
+					$style = ' style="width:25px; height:25px; display:inline-block; vertical-align:middle; margin-right:6px;"';
 					break;
 				case '50x50':
-					$style = ' style="width:50px; height:50px;"';
+					$style = ' style="width:50px; height:50px; display:inline-block; vertical-align:middle; margin-right:6px;"';
 					break;
 				case '75x75':
-					$style = ' style="width:75px; height:75px;"';
+					$style = ' style="width:75px; height:75px; display:inline-block; vertical-align:middle; margin-right:6px;"';
 					break;
 				case '100x100':
-					$style = ' style="width:100px; height:100px;"';
+					$style = ' style="width:100px; height:100px; display:inline-block; vertical-align:middle; margin-right:6px;"';
 					break;
 			}
 
-			$icon = '<img' . $style . ' class="paynl_icon" src="/extension/paynl/catalog/view/image/payment/paynl/' . $payment_options['brand_id'] . '.png"> ';
+			// Explicit inline-block + vertical-align here rather than
+			// relying on the surrounding page's own CSS: many themes'
+			// CSS resets (Tailwind's preflight, for one - confirmed live
+			// this is exactly what was happening on a real store) set
+			// img { display: block; } by default, which pushes this
+			// label's text onto a new line below the icon instead of
+			// beside it. Self-contained inline styling works regardless
+			// of the theme, which matters for a portable package that
+			// can't assume any particular theme's CSS.
+			$icon = '<img' . $style . ' class="paynl_icon" src="/extension/paynl/catalog/view/image/payment/paynl/' . $payment_options['brand_id'] . '.png">';
 		}
 
 		$name = $icon . $this->getLabel();

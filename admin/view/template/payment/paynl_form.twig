@@ -341,6 +341,27 @@
 									<input type="text" class="form-control" name="{{ payment_method_name }}_totalmax" value="{{ totalmax }}"/>
 								</div>
 							</div>
+
+							{% if surcharge_allowed %}
+								<div class="row mb-3">
+									<label class="col-sm-3 col-form-label">{{ text_surcharge }}</label>
+									<div class="col-sm-4">
+										<input type="text" class="form-control" name="{{ payment_method_name }}_surcharge_fixed" value="{{ surcharge_fixed }}" placeholder="0.00"/>
+										<div class="form-text">{{ text_surcharge_fixed_tooltip }}</div>
+									</div>
+									<label class="col-sm-2 col-form-label text-sm-end">{{ text_surcharge_percentage }}</label>
+									<div class="col-sm-3">
+										<input type="text" class="form-control" name="{{ payment_method_name }}_surcharge_percentage" value="{{ surcharge_percentage }}" placeholder="0.00"/>
+										<div class="form-text">{{ text_surcharge_percentage_tooltip }}</div>
+									</div>
+								</div>
+							{% else %}
+								<div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+									<i class="fa-solid fa-circle-info"></i>
+									<span>{{ text_surcharge_not_allowed }}</span>
+								</div>
+							{% endif %}
+
 							<div class="row mb-3">
 								<label class="col-sm-3 col-form-label">{{ entry_sort_order }}</label>
 								<div class="col-sm-9">

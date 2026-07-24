@@ -112,6 +112,11 @@ $_['text_status_refunded'] = 'Order status: refunded';
 $_['text_status_refunded_tooltip'] = "The status the order should get once payment has been refunded.";
 $_['text_minimum_amount'] = 'Minimum order amount';
 $_['text_maximum_amount'] = 'Maximum order amount';
+$_['text_surcharge'] = 'Surcharge - fixed amount';
+$_['text_surcharge_fixed_tooltip'] = 'Fixed amount (in your store currency) added to the order total when this payment method is used. By law, this may not exceed the actual transaction costs Pay. charges you.';
+$_['text_surcharge_percentage'] = 'Surcharge - percentage';
+$_['text_surcharge_percentage_tooltip'] = 'Percentage of the order amount charged as a surcharge when this payment method is used (e.g. 1.8 for 1.8%). Added on top of the fixed amount above.';
+$_['text_surcharge_not_allowed'] = 'A surcharge is not legally permitted for this payment method (iDEAL, standard consumer payment cards, SEPA direct debit/bank transfer, and some local European bank methods, among others). These fields are hidden accordingly.';
 $_['text_payment_instructions'] = 'Instructions';
 $_['text_payment_instructions_tooltip'] = 'If you want to show instructions to the customer, you can enter them here.';
 

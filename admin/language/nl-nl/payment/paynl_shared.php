@@ -112,6 +112,11 @@ $_['text_status_refunded'] = 'Order status terugbetaald';
 $_['text_status_refunded_tooltip'] = 'De status die het order moet krijgen nadat de betaling is terugbetaald';
 $_['text_minimum_amount'] = 'Minimaal order bedrag';
 $_['text_maximum_amount'] = 'Maximaal order bedrag';
+$_['text_surcharge'] = 'Toeslag - vast bedrag';
+$_['text_surcharge_fixed_tooltip'] = 'Vast bedrag (in €) dat bovenop de bestelling wordt gerekend bij gebruik van deze betaalmethode. Wettelijk mag u hierbij niet meer rekenen dan de daadwerkelijke transactiekosten die Pay. u in rekening brengt.';
+$_['text_surcharge_percentage'] = 'Toeslag - percentage';
+$_['text_surcharge_percentage_tooltip'] = 'Percentage van het orderbedrag dat als toeslag wordt gerekend bij gebruik van deze betaalmethode (bijv. 1.8 voor 1,8%). Wordt opgeteld bij het vaste bedrag hierboven.';
+$_['text_surcharge_not_allowed'] = 'Voor deze betaalmethode is een toeslag wettelijk niet toegestaan (o.a. iDEAL, standaard consumenten betaalkaarten, SEPA-incasso/overboeking, en enkele lokale Europese bankmethoden). Deze velden worden daarom niet getoond.';
 $_['text_payment_instructions'] = 'Instructies';
 $_['text_payment_instructions_tooltip'] = 'Als u instructies wilt tonen aan de klant, kunt u die hier aangeven';
 
